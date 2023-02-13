@@ -1,0 +1,43 @@
+name: DartCompile
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        # TODO: Add Windows.
+        os: [ ubuntu-latest, macos-latest ]
+        include:
+          - os: ubuntu-latest
+            executable_name: x_linux
+          - os: macos-latest
+            executable_name: x_darwin
+
+    # permissions:
+    #   # Give the default GITHUB_TOKEN write permission to commit and push the
+    #   # added or changed files to the repository.
+    #   contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@a57a6c04cf7d4840e88432aad6281d1e125f0d46
+        with:
+          sdk: stable
+          architecture: x64
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Compile
+        # TODO: Replace this with the x command.
+        run: dart compile exe lib/main.dart -o bin/compiled/${{ matrix.executable_name }}
+
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          file_pattern: bin/compiled/*
