@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -e
+
+IS_GIT_INSTALLED=$(which git || echo "0")
+
+if [ "$IS_GIT_INSTALLED" = "0" ]; then
+  echo "Git is required in order to install the x tool."
+  exit 1
+fi
+
+if [[ -d "x" && -d "x/bin" && -f "x/bin/x" ]]; then
+  echo "The x tool is already installed at this location."
+  exit 0
+fi
+
+X_ROOT_DIR="$(pwd)/x"
+X_BIN_DIR="$X_ROOT_DIR/bin"
+X_EXECUTABLE="$X_BIN_DIR/x"
+
+x_self_symlink() {
+  set +e
+  "$X_EXECUTABLE" self symlink > /dev/null 2>&1
+  STATUS=$?
+  set -e
+  if [ "$STATUS" != "0" ]; then
+    echo "Could not create a symlink to the x tool. Trying again with sudo..."
+    sudo "$X_EXECUTABLE" self symlink
+  fi
+}
+
+
+echo "Downloading the x tool..."
+git clone --depth 1 https://github.com/mdebbar/x.git
+
+echo "Installing the x tool..."
+(cd x && x_self_symlink)
+
+echo "The x tool was installed successfully."
