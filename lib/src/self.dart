@@ -29,12 +29,28 @@ class SelfCompileCommand extends Command {
   @override
   final description = 'Compile the x tool to a standalone executable.';
 
+  SelfCompileCommand() {
+    argParser.addOption(
+      'executable-filename',
+      abbr: 'f',
+      help: 'Name of the executable file.',
+      mandatory: true,
+    );
+  }
+
+  String get argExecutableFilename => stringArg('executable-filename');
+
   @override
   Future<void> run() async {
-    final mainDartFile = File(path.join(environment.libDir.path, 'main.dart'));
-    // TODO: Figure out the correct executable name based on the current platform.
+    if (path.basename(argExecutableFilename) != argExecutableFilename) {
+      throw wrongArg(
+        'executable-filename',
+        'must be a filename only with no path.',
+      );
+    }
     final executableFile =
-        File(path.join(environment.compiledDir.path, 'x_darwin'));
+        File(path.join(environment.compiledDir.path, argExecutableFilename));
+    final mainDartFile = File(path.join(environment.libDir.path, 'main.dart'));
 
     print('Compiling the x tool to `${executableFile.path}`...');
     await dartCompileToExecutable(
@@ -60,11 +76,11 @@ class SelfSymlinkCommand extends Command {
     );
   }
 
-  String argLocation() => stringArg('link-location');
+  String get argLocation => stringArg('link-location');
 
   @override
   Future<void> run() async {
-    final linkDir = Directory(argLocation()).absolute;
+    final linkDir = Directory(argLocation).absolute;
     if (!(await linkDir.exists())) {
       throw wrongArg('link-location', 'must point to an existing directory.');
     }

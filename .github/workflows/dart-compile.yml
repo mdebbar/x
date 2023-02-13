@@ -34,10 +34,11 @@ jobs:
         run: dart pub get
 
       - name: Compile
-        # TODO: Replace this with the x command.
-        run: dart compile exe lib/main.dart -o bin/compiled/${{ matrix.executable_name }}
+        # TODO: Replace this with the x command?
+        run: dart lib/main.dart self compile --output-file-name ${{ matrix.executable_name }}
 
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: bin/compiled/*
+          commit_message: "Compile ${{ matrix.executable_name }} on ${{ matrix.os }}"
