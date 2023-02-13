@@ -36,8 +36,11 @@ jobs:
       - name: Compile
         run: USE_DART=1 bin/x self compile --executable-filename ${{ matrix.executable_name }}
 
-
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: Wandalen/wretry.action@master
         with:
-          file_pattern: bin/compiled/*
-          commit_message: "Compile ${{ matrix.executable_name }} on ${{ matrix.os }}"
+          attempt_limit: 3
+          attempt_delay: 2000
+          action: stefanzweifel/git-auto-commit-action@v4
+          with: |
+            file_pattern: bin/compiled/*
+            commit_message: "Compile ${{ matrix.executable_name }} on ${{ matrix.os }}"

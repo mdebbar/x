@@ -5,7 +5,6 @@ import 'src/utils/environment.dart' as environment;
 
 void main(List<String> args) {
   environment.setup();
-  print(environment.rootDir.path);
 
   var runner = CommandRunner('x', 'The x productivity tool');
   for (var command in topLevelCommands) {
