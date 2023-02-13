@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -e
+
+function follow_links() (
+  cd -P "$(dirname -- "$1")"
+  file="$PWD/$(basename -- "$1")"
+  while [[ -h "$file" ]]; do
+    cd -P "$(dirname -- "$file")"
+    file="$(readlink -- "$file")"
+    cd -P "$(dirname -- "$file")"
+    file="$PWD/$(basename -- "$file")"
+  done
+  echo "$file"
+)
+
+X_SCRIPT_PATH="$(follow_links "${BASH_SOURCE[0]}")"
+X_BIN_DIR="$( cd "$( dirname "$X_SCRIPT_PATH" )" >/dev/null 2>&1 && pwd )"
+X_ROOT_DIR="$(dirname "$X_BIN_DIR")"
+
+export X_ROOT_DIR
+
+# TODO: Need a good story for reliably switching to Dart during development.
+#
+# if (is_git_installed)
+#   if (is_dart_installed) {
+#     if (is_git_dirty) {
+#       USE_DART="1"
+#     } else if (!is_git_sha_same_as_binary) {
+#       USE_DART="1"
+#     }
+#   }
+# }
+USE_DART="0"
+
+if [ -n "`which git`" ]; then
+  if [ -n "`which dart`" ]; then
+    IS_GIT_DIRTY=$(cd "$X_ROOT_DIR" >/dev/null 2>&1 && (git diff --quiet || echo "dirty"))
+    if [ -n "$IS_GIT_DIRTY" ]; then
+      USE_DART="1"
+      # TODO: Also check if the current git sha is the same as the binary's.
+    fi
+  fi
+fi
+
+if [ "$USE_DART" = "1" ]; then
+  echo "-- Using Dart --"
+  dart "$X_ROOT_DIR/lib/main.dart" "$@"
+else
+  # TODO: Use the correct executable for the current platform.
+  X_EXECUTABLE_PATH="$X_ROOT_DIR/bin/compiled/x_darwin"
+  if [ -f "$X_EXECUTABLE_PATH" ]; then
+    "$X_EXECUTABLE_PATH" "$@"
+  else
+    echo "The x executable was not found at: `$X_EXECUTABLE_PATH`"
+    exit 1
+  fi
+fi
+

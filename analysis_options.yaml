@@ -1,0 +1,19 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    - avoid_dynamic_calls
+    - no_default_cases
+    - no_duplicate_case_values
+    - prefer_relative_imports
+    - unawaited_futures
+
+# analyzer:
+#   exclude:
+#     - path/to/excluded/files/**
+
+# For more information about the core and recommended set of lints, see
+# https://dart.dev/go/core-lints
+
+# For additional information about configuring this file, see
+# https://dart.dev/guides/language/analysis-options
