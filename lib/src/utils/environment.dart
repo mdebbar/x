@@ -4,6 +4,8 @@ import 'package:path/path.dart' as path;
 
 import 'assert.dart';
 
+late final String platformName;
+
 late final Directory rootDir;
 
 Directory get binDir => Directory(path.join(
@@ -27,6 +29,7 @@ File xFile = File(path.join(
 
 void setup() {
   _ensureRootDir();
+  _ensurePlatformName();
 }
 
 void _ensureRootDir() {
@@ -49,10 +52,26 @@ void _ensureRootDir() {
   rootDir = Directory(rootDirPath);
 
   prodAssert(
-    binDir.existsSync() &&
-        libDir.existsSync() &&
-        compiledDir.existsSync() &&
-        xFile.existsSync(),
+    binDir.existsSync() && libDir.existsSync() && xFile.existsSync(),
     'Expected the `X_ROOT_DIR` environment variable to point to a valid x root directory, but found: `$rootDirPath`',
+  );
+}
+
+void _ensurePlatformName() {
+  final maybePlatformName = Platform.environment['X_PLATFORM_NAME'];
+  prodAssert(
+    maybePlatformName != null,
+    'Expected the `X_PLATFORM_NAME` environment variable to be set, but it was not',
+  );
+
+  platformName = maybePlatformName!;
+  prodAssert(
+    platformName.isNotEmpty,
+    'Expected the `X_PLATFORM_NAME` environment variable to be a valid, but it was an empty string',
+  );
+
+  prodAssert(
+    platformName == 'macos' || platformName == 'linux',
+    'Expected the `X_PLATFORM_NAME` environment variable to be either `macos` or `linux`, but found: `$platformName`',
   );
 }

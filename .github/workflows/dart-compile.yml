@@ -12,11 +12,6 @@ jobs:
       matrix:
         # TODO: Add Windows.
         os: [ ubuntu-latest, macos-latest ]
-        include:
-          - os: ubuntu-latest
-            executable_name: x_linux
-          - os: macos-latest
-            executable_name: x_darwin
 
     steps:
       - uses: actions/checkout@v3
@@ -33,23 +28,23 @@ jobs:
         run: dart pub get
 
       - name: Compile to executable
-        run: USE_DART=1 bin/x self compile --executable-filename ${{ matrix.executable_name }}
+        run: USE_DART=1 bin/x self compile
 
       - name: Setup git config
         run: |
           git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "<>"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Check if executable files are changed
-        id: check_changed
+        id: check_changes
         run: |
-          echo "GIT_STATUS=$(git status --porcelain bin/compiled/)" >> $GITHUB_OUTPUT
+          echo "GIT_STATUS=$(git status --porcelain bin/compiled)" >> $GITHUB_OUTPUT
 
       - name: Commit and push the executable files
         # Only commit if there are changes.
-        if: ${{ steps.git-status.outputs.GIT_STATUS != '' }}
+        if: ${{ steps.check_changes.outputs.GIT_STATUS != '' }}
         run: |
           git add bin/compiled/
-          git commit -m "Compile ${{ matrix.executable_name }} on ${{ matrix.os }}"
+          git commit -m "Compile to executable on '${{ matrix.os }}'"
           git pull --rebase
           git push

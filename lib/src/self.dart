@@ -29,30 +29,14 @@ class SelfCompileCommand extends Command {
   @override
   final description = 'Compile the x tool to a standalone executable.';
 
-  SelfCompileCommand() {
-    argParser.addOption(
-      'executable-filename',
-      abbr: 'f',
-      help: 'Name of the executable file.',
-      mandatory: true,
-    );
-  }
-
-  String get argExecutableFilename => stringArg('executable-filename');
-
   @override
   Future<void> run() async {
-    if (path.basename(argExecutableFilename) != argExecutableFilename) {
-      throw wrongArg(
-        'executable-filename',
-        'must be a filename only with no path.',
-      );
-    }
     final executableFile =
-        File(path.join(environment.compiledDir.path, argExecutableFilename));
+        File(path.join(environment.compiledDir.path, environment.platformName));
     final mainDartFile = File(path.join(environment.libDir.path, 'main.dart'));
 
     print('Compiling the x tool to `${executableFile.path}`...');
+    await executableFile.parent.ensureExists();
     await dartCompileToExecutable(
       dartFile: mainDartFile,
       outFile: executableFile,
@@ -76,23 +60,13 @@ class SelfSymlinkCommand extends Command {
     );
   }
 
-  String get argLocation => stringArg('link-location');
+  String get argLinkLocation => stringArg('link-location');
 
   @override
   Future<void> run() async {
-    final linkDir = Directory(argLocation).absolute;
-    if (!(await linkDir.exists())) {
-      throw wrongArg('link-location', 'must point to an existing directory.');
-    }
+    final linkPath = path.absolute(argLinkLocation, 'x');
 
-    final linkFile = File(path.join(linkDir.path, 'x'));
-    final originalFile = environment.xFile;
-
-    print('Creating a symlink to the x tool in `${linkFile.path}`...');
-    await symlink(
-      originalFile: originalFile,
-      linkFile: linkFile,
-      overwrite: true,
-    );
+    print('Creating a symlink to the x tool in `$linkPath`...');
+    await environment.xFile.symlinkFrom(linkPath, overwrite: true);
   }
 }
