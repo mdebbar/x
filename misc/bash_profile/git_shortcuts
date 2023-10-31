@@ -1,0 +1,82 @@
+MAIN_BRANCH="main"
+# MAIN_BRANCH="master"
+
+# Git
+alias st="git st"
+alias df="git df"
+alias dfc="git df --cached"
+alias cm="git commit -m"
+alias am="git commit --amend"
+alias sl="git sl"
+alias pm="git co $MAIN_BRANCH && git pull upstream $MAIN_BRANCH"
+
+# Rebase the given branch on main
+rbm() {
+  SRC_BRANCH=$1
+  BRANCH_LENGTH=$2
+  rbon $SRC_BRANCH $MAIN_BRANCH $BRANCH_LENGTH
+}
+
+# Rebase all the given branches on main
+rbma() {
+  for SRC_BRANCH in $@
+  do
+    echo "git rebase --onto $MAIN_BRANCH $SRC_BRANCH^ $SRC_BRANCH"
+    git rebase --onto "$MAIN_BRANCH" "$SRC_BRANCH"^ "$SRC_BRANCH" || return 1
+  done
+}
+
+# Rebase the first branch on top of the second branch, with an optional branch length.
+rbon() {
+  SRC_BRANCH=$1
+  DEST_BRANCH=$2
+  BRANCH_LENGTH="${3:-1}"
+  echo "git rebase --onto $DEST_BRANCH $SRC_BRANCH~$BRANCH_LENGTH $SRC_BRANCH"
+  git rebase --onto "$DEST_BRANCH" "$SRC_BRANCH"~$BRANCH_LENGTH "$SRC_BRANCH"
+}
+
+# Rebase the branches as a stacked chain on main
+rbmc() {
+  DEST_BRANCH=$MAIN_BRANCH
+  for SRC_BRANCH in $@
+  do
+    echo "git rebase --onto $DEST_BRANCH $SRC_BRANCH^ $SRC_BRANCH"
+    git rebase --onto "$DEST_BRANCH" "$SRC_BRANCH"^ "$SRC_BRANCH" || return 1
+    DEST_BRANCH=$SRC_BRANCH
+  done
+}
+
+# Rebase a chain of branches on each other
+rbc() {
+  DEST_BRANCH=$1
+  for SRC_BRANCH in ${@:2}
+  do
+    echo "git rebase --onto $DEST_BRANCH $SRC_BRANCH^ $SRC_BRANCH"
+    git rebase --onto "$DEST_BRANCH" "$SRC_BRANCH"^ "$SRC_BRANCH" || return 1
+    DEST_BRANCH=$SRC_BRANCH
+  done
+}
+
+# Merges "main" into the given branch
+mm() {
+  SRC_BRANCH=$1
+  echo "[$SRC_BRANCH] git merge $MAIN_BRANCH --no-edit"
+  git checkout "$SRC_BRANCH" && git merge "$MAIN_BRANCH" --no-edit
+}
+
+# Merges "main" into all the given branches
+mma() {
+  for SRC_BRANCH in $@
+  do
+    mm "$SRC_BRANCH" || return 1
+  done
+}
+
+# Merge "main" into the stacked chain of branches
+mmc() {
+  FIRST_BRANCH=$1
+  # 1. Merge main into the first branch.
+  mm "$FIRST_BRANCH" || return 1
+  # 2. Rebase the chain of branches on top of each other.
+  rbc $@
+}

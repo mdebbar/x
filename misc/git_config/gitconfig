@@ -1,0 +1,13 @@
+[core]
+	autocrlf = false
+	filemode = false
+	excludesfile = ~/.gitignore_global
+[color]
+	ui = true
+[alias]
+	co = checkout
+	st = status
+	df = diff
+	sl = log --oneline --graph --all --decorate
+[pull]
+	ff = only
